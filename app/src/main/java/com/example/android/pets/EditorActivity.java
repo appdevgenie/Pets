@@ -17,6 +17,7 @@ package com.example.android.pets;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -56,8 +57,6 @@ public class EditorActivity extends AppCompatActivity {
      */
     private int mGender = 0;
 
-    private PetDbHelper petDbHelper;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +70,6 @@ public class EditorActivity extends AppCompatActivity {
 
         setupSpinner();
 
-        petDbHelper = new PetDbHelper(this);
     }
 
     /**
@@ -119,20 +117,22 @@ public class EditorActivity extends AppCompatActivity {
         String breedString = mBreedEditText.getText().toString().trim();
         int weightInt = Integer.parseInt(mWeightEditText.getText().toString().trim());
 
-        SQLiteDatabase sqLiteDatabase = petDbHelper.getWritableDatabase();
-
         ContentValues contentValues = new ContentValues();
         contentValues.put(PetEntry.COLUMN_PET_NAME, nameString);
         contentValues.put(PetEntry.COLUMN_PET_BREED, breedString);
         contentValues.put(PetEntry.COLUMN_PET_GENDER, mGender);
         contentValues.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
 
-        long newRowId = sqLiteDatabase.insert(PetEntry.TABLE_NAME, null, contentValues);
+        Uri newRowUri = getContentResolver().insert(PetEntry.CONTENT_URI, contentValues);
 
-        if(newRowId == -1){
-            Toast.makeText(EditorActivity.this, "Error saving pet", Toast.LENGTH_SHORT).show();
+        if (newRowUri == null) {
+            // If the new content URI is null, then there was an error with insertion.
+            Toast.makeText(this, getString(R.string.editor_insert_pet_failed),
+                    Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(EditorActivity.this, "Pet saved with id: " + newRowId, Toast.LENGTH_SHORT).show();
+            // Otherwise, the insertion was successful and we can display a toast.
+            Toast.makeText(this, getString(R.string.editor_insert_pet_successful),
+                    Toast.LENGTH_SHORT).show();
         }
     }
 

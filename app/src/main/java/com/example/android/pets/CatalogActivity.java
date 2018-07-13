@@ -19,6 +19,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -36,8 +37,6 @@ import com.example.android.pets.data.PetDbHelper;
  */
 public class CatalogActivity extends AppCompatActivity {
 
-    private PetDbHelper petDbHelper;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,17 +52,9 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
-        petDbHelper = new PetDbHelper(this);
-
     }
 
     private void displayDatabaseInfo() {
-        // To access our database, we instantiate our subclass of SQLiteOpenHelper
-        // and pass the context, which is the current activity.
-        //PetDbHelper mDbHelper = new PetDbHelper(this);
-
-        // Create and/or open a database to read from it
-        SQLiteDatabase db = petDbHelper.getReadableDatabase();
 
         // Perform this raw SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
@@ -74,14 +65,7 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLUMN_PET_GENDER,
                 PetEntry.COLUMN_PET_WEIGHT};
 
-        Cursor cursor = db.query(
-                PetEntry.TABLE_NAME,
-                projection,
-                null,
-                null,
-                null,
-                null,
-                null);
+        Cursor cursor = getContentResolver().query(PetEntry.CONTENT_URI, projection, null, null, null);
 
         TextView displayView = (TextView) findViewById(R.id.text_view_pet);
 
@@ -129,13 +113,13 @@ public class CatalogActivity extends AppCompatActivity {
         } finally {
             // Always close the cursor when you're done reading from it. This releases all its
             // resources and makes it invalid.
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
         }
     }
 
     private void insertPet() {
-
-        SQLiteDatabase sqLiteDatabase = petDbHelper.getWritableDatabase();
 
         ContentValues contentValues = new ContentValues();
         contentValues.put(PetEntry.COLUMN_PET_NAME, "Toto");
@@ -143,9 +127,9 @@ public class CatalogActivity extends AppCompatActivity {
         contentValues.put(PetEntry.COLUMN_PET_GENDER, PetEntry.GENDER_MALE);
         contentValues.put(PetEntry.COLUMN_PET_WEIGHT, 7);
 
-        long newRowId = sqLiteDatabase.insert(PetEntry.TABLE_NAME, null, contentValues);
+        Uri newRowUri = getContentResolver().insert(PetEntry.CONTENT_URI, contentValues);
 
-        Log.d("CatalogActivity", "insertPet: new row id " + newRowId);
+        Log.d("CatalogActivity", "insertPet: new row id " + newRowUri);
     }
 
     @Override
